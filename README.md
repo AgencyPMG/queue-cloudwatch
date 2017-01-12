@@ -28,7 +28,8 @@ $finalDriver = new MetricsDriver($driver, CloudWatchClient::factory([
 All metrics have the dimensions...
 
 - `QueueName` - The name of the queue to which the metrics belong
-- `MessageName` - The value returned from `Message::getName`
+- `MessageName` - The value returned from `Message::getName`. When a message is
+  not present for logging the metric, this dimension will be set to `__none__`.
 
 ### Driver Metrics
 
@@ -42,7 +43,8 @@ There's a metric for each method on the driver, essentially. They all use
 `Count` as the metric unit.
 
 - `MessageEnqueue` - Fired on `Driver::enqueue`
-- `MessageDequeue` - Fired on `Driver::dequeue`
+- `MessageDequeue` - Fired on `Driver::dequeue`. This is only fired when a
+  message is returned from the wrapped `Driver::dequeue`.
 - `MessageSuccess ` - Fired on `Driver::ack`
 - `MessageFailure` - Fired on `Driver::fail`
 - `MessageRetry` - Fired on `Driver::retry`
@@ -61,9 +63,9 @@ retried. These all use `Milliseconds` as their metric unit.
 The `MessageTime` metric will have an additional dimension named `MessageStatus`
 which is how the given message finished when the timer completed. This will be:
 
-- `success` when the message was passed to `Driver::ack`
-- `failure` when the message was passed to `Driver::fail`
-- `retry` When the message was passed to `Driver::retry`
+- `Success` when the message was passed to `Driver::ack`
+- `Failure` when the message was passed to `Driver::fail`
+- `Retry` When the message was passed to `Driver::retry`
 
 ## Error Handling
 
