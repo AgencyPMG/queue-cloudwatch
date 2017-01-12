@@ -8,6 +8,7 @@
     ],
     "require": {
         "php": "~5.6|~7.0",
+        "pmg/queue": "~3.0",
         "psr/log": "~1.0",
         "aws/aws-sdk-php": "~3.0",
         "symfony/stopwatch": "~2.8|~3.0"
