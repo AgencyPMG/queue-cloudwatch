@@ -187,6 +187,23 @@ final class MetricsDriver implements Driver
         $this->trackMetrics($queueName, $metrics, $envelope->unwrap());
     }
 
+    /**
+     * Sends all the provided `Metrics` to cloudwatch.
+     *
+     * The only thing interesting in here is that is sends the metrics both with
+     * and without dimensions. CloudWatch treats each unique combination of
+     * dimensions as a unique metric. Which is pretty useless for getting an
+     * aggregate view. To help with that, we send each metric twice. Once with
+     * dimensions and once without.
+     *
+     * @see http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#dimension-combinations
+     *
+     * @param string $queueName The queue to which the $msg belongs
+     * @param Metric[] $metrics The set of metrics to track
+     * @param Message|null $msg The message that's being tracked. May be `null`
+     *        on driver errors.
+     * @return void
+     */
     private function trackMetrics($queueName, array $metrics, Message $msg=null)
     {
         $dimensions = $this->dimensionsFor($queueName, $msg);
@@ -194,9 +211,12 @@ final class MetricsDriver implements Driver
         try {
             $this->cloudwatch->putMetricData([
                 'Namespace' => $this->metricsNamespace,
-                'MetricData' => array_map(function (Metric $m) use ($dimensions) {
-                    return $m->toClientArray($dimensions);
-                }, $metrics),
+                'MetricData' => array_merge(...array_map(function (Metric $m) use ($dimensions) {
+                    $noDim = $m->toClientArray();
+                    unset($noDim['Dimensions']);
+
+                    return [$noDim, $m->toClientArray($dimensions)];
+                }, $metrics)),
             ]);
         } catch (AwsException $e) {
             $this->logger->error('Caught {cls} putting metric data: {msg}', [

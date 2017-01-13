@@ -95,7 +95,7 @@ class MetricsDriverTest extends TestCase
             ->with($this->callback(function (array $req) use ($type) {
                 $mn = $this->metricNamesIn($req);
 
-                $this->assertCount(2, $mn);
+                $this->assertCount(4, $mn, "Should have four message metrics: 2 Message{$type}, 2 MessageTime. Got: ".var_export($mn, true));
                 $this->assertContains("Message{$type}", $mn);
                 $this->assertContains('MessageTime', $mn);
 
@@ -161,7 +161,7 @@ class MetricsDriverTest extends TestCase
             ->with($this->callback(function (array $req) {
                 $mn = $this->metricNamesIn($req);
 
-                $this->assertCount(1, $mn);
+                $this->assertCount(2, $mn, 'should have two driver errors');
                 $this->assertContains('DriverError', $mn);
 
                 return true;
