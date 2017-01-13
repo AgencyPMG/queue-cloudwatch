@@ -39,7 +39,7 @@ final class MetricsDriver implements Driver
     /**
      * @var string
      */
-    private $metricNamespace;
+    private $metricsNamespace;
 
     /**
      * @var LoggerInterface
