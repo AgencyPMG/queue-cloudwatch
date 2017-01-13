@@ -95,3 +95,17 @@ $finalDriver = new MetricsDriver($driver, CloudWatchClient::factory([
 
 // now use $finalDriver in your consumers/producers
 ```
+
+## Testing
+
+```
+./vendor/bin/phpunit
+```
+
+The tests include a set of integration tests that actually talk to CloudWatch.
+Be sure to have [set up credentials](http://docs.aws.amazon.com/aws-sdk-php/v3/guide/guide/credentials.html).
+in order to run those tests. Otherwise you may exclude them with...
+
+```
+./vendor/bin/phpunit --exclude-group integration
+```

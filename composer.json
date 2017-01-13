@@ -19,5 +19,10 @@
         "psr-4": {
             "PMG\\Queue\\CloudWatch\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PMG\\Queue\\CloudWatch\\": "test/"
+        }
     }
 }
