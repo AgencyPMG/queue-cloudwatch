@@ -1,6 +1,6 @@
 # Queue CloudWatch
 
-A `pmg/queue` driver decorator that dispatched cloudwatch metrics when messages
+A `pmg/queue` driver decorator that dispatches cloudwatch metrics when messages
 are sent through.
 
 ## Example
