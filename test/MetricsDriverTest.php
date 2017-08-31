@@ -26,6 +26,7 @@ class MetricsDriverTest extends TestCase
             ['ack', 'Success'],
             ['fail', 'Failure'],
             ['retry', 'Retry'],
+            ['release', 'Release'],
         ];
     }
 

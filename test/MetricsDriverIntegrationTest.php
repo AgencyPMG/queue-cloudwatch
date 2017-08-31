@@ -52,6 +52,7 @@ class MetricsDriverIntegrationTest extends TestCase
             ['ack'],
             ['fail'],
             ['retry'],
+            ['release'],
         ];
     }
 

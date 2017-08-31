@@ -71,7 +71,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function enqueue($queueName, Message $message)
+    public function enqueue(string $queueName, Message $message) : Envelope
     {
         try {
             $out = $this->wrapped->enqueue($queueName, $message);
@@ -90,7 +90,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function dequeue($queueName)
+    public function dequeue(string $queueName)
     {
         try {
             $env = $this->wrapped->dequeue($queueName);
@@ -117,7 +117,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function ack($queueName, Envelope $envelope)
+    public function ack(string $queueName, Envelope $envelope)
     {
         try {
             $out = $this->wrapped->ack($queueName, $envelope);
@@ -134,7 +134,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function retry($queueName, Envelope $envelope)
+    public function retry(string $queueName, Envelope $envelope) : Envelope
     {
         try {
             $out = $this->wrapped->retry($queueName, $envelope);
@@ -151,7 +151,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function fail($queueName, Envelope $envelope)
+    public function fail(string $queueName, Envelope $envelope)
     {
         try {
             $out = $this->wrapped->fail($queueName, $envelope);
@@ -161,6 +161,23 @@ final class MetricsDriver implements Driver
         }
 
         $this->trackMessageFinished('Failure', $queueName, $envelope);
+
+        return $out;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function release(string $queueName, Envelope $envelope)
+    {
+        try {
+            $out = $this->wrapped->release($queueName, $envelope);
+        } catch (DriverError $e) {
+            $this->trackDriverError($queueName, $e, $envelope->unwrap());
+            throw $e;
+        }
+
+        $this->trackMessageFinished('Release', $queueName, $envelope);
 
         return $out;
     }

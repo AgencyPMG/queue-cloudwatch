@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": "~7.0",
-        "pmg/queue": "~3.0",
+        "pmg/queue": "~4.0",
         "psr/log": "~1.0",
         "aws/aws-sdk-php": "~3.0"
     },
