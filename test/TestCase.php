@@ -16,7 +16,7 @@ use PMG\Queue\Driver;
 use PMG\Queue\DefaultEnvelope;
 use PMG\Queue\SimpleMessage;
 
-abstract class TestCase extends \PHPUnit_Framework_TestCase
+abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     const NS = 'PMG/Queue/MetricsTest';
     const Q = 'queueName';
