@@ -48,6 +48,7 @@ There's a metric for each method on the driver, essentially. They all use
 - `MessageSuccess ` - Fired on `Driver::ack`
 - `MessageFailure` - Fired on `Driver::fail`
 - `MessageRetry` - Fired on `Driver::retry`
+- `MessageRelease` - Fired on `Driver::release`
 
 You might use these message counts to alert on a high volume of message
 failures or retries.
@@ -66,6 +67,7 @@ which is how the given message finished when the timer completed. This will be:
 - `Success` when the message was passed to `Driver::ack`
 - `Failure` when the message was passed to `Driver::fail`
 - `Retry` When the message was passed to `Driver::retry`
+- `Release` When the message was passed to `Driver::release`
 
 ## Error Handling
 
