@@ -23,7 +23,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
     protected $logger, $message, $wrapped, $envelope;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         $this->wrapped = $this->createMock(Driver::class);
         $this->logger = new Test\CollectingLogger();

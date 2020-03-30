@@ -78,7 +78,7 @@ class MetricsDriverIntegrationTest extends TestCase
         $this->assertNoErrors();
     }
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->cloudwatch = CloudWatchClient::factory([

@@ -132,7 +132,7 @@ class MetricsDriverTest extends TestCase
         $this->assertCount(1, $this->logger);
     }
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->cloudwatch = $this->getMockBuilder(CloudWatchClient::class)
