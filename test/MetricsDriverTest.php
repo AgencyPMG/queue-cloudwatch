@@ -106,16 +106,20 @@ class MetricsDriverTest extends TestCase
             ->method('dequeue')
             ->with(self::Q)
             ->willReturn($this->envelope);
-        $this->wrapped->expects($this->once())
+        $method = $this->wrapped->expects($this->once())
             ->method($finish)
-            ->with(self::Q, $this->envelope)
-            ->willReturn($this->envelope);
+            ->with(self::Q, $this->envelope);
+        if ('retry' === $finish) {
+            $method->willReturn($this->envelope);
+        }
 
         $e = $this->driver->dequeue(self::Q);
         sleep(1); // give a bit of time to track for MessageTime
         $e2 = call_user_func([$this->driver, $finish], self::Q, $e);
 
-        $this->assertSame($this->envelope, $e2);
+        if ('retry' === $finish) {
+            $this->assertSame($this->envelope, $e2);
+        }
     }
 
     public function testCloudWatchErrorsAreLoggedAndSwallowed()
