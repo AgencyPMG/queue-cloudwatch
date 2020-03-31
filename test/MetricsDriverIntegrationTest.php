@@ -51,7 +51,6 @@ class MetricsDriverIntegrationTest extends TestCase
         return [
             ['ack'],
             ['fail'],
-            ['retry'],
             ['release'],
         ];
     }
@@ -67,18 +66,36 @@ class MetricsDriverIntegrationTest extends TestCase
             ->willReturn($this->envelope);
         $this->wrapped->expects($this->once())
             ->method($finish)
-            ->with(self::Q, $this->envelope)
-            ->willReturn($this->envelope);
+            ->with(self::Q, $this->envelope);
 
         $e = $this->driver->dequeue(self::Q);
         sleep(1); // give a bit of time to track for MessageTime
-        $e2 = call_user_func([$this->driver, $finish], self::Q, $e);
+        call_user_func([$this->driver, $finish], self::Q, $e);
+
+        $this->assertNoErrors();
+    }
+
+    public function testRetryReturnsTheEnvelopeFromTheTheWrappedDriver()
+    {
+        $this->wrapped->expects($this->once())
+            ->method('dequeue')
+            ->with(self::Q)
+            ->willReturn($this->envelope);
+        $this->wrapped->expects($this->once())
+            ->method('retry')
+            ->with(self::Q, $this->envelope)
+            ->willReturn($this->envelope);
+
+
+        $e = $this->driver->dequeue(self::Q);
+        sleep(1); // give a bit of time to track for MessageTime
+        $e2 = call_user_func([$this->driver, 'retry'], self::Q, $e);
 
         $this->assertSame($this->envelope, $e2);
         $this->assertNoErrors();
     }
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->cloudwatch = CloudWatchClient::factory([

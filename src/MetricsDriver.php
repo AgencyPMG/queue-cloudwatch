@@ -71,7 +71,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function enqueue(string $queueName, Message $message) : Envelope
+    public function enqueue(string $queueName, object $message) : Envelope
     {
         try {
             $out = $this->wrapped->enqueue($queueName, $message);
@@ -90,7 +90,7 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function dequeue(string $queueName)
+    public function dequeue(string $queueName) : ?Envelope
     {
         try {
             $env = $this->wrapped->dequeue($queueName);
@@ -117,18 +117,16 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function ack(string $queueName, Envelope $envelope)
+    public function ack(string $queueName, Envelope $envelope) : void
     {
         try {
-            $out = $this->wrapped->ack($queueName, $envelope);
+            $this->wrapped->ack($queueName, $envelope);
         } catch (DriverError $e) {
             $this->trackDriverError($queueName, $e, $envelope->unwrap());
             throw $e;
         }
 
         $this->trackMessageFinished('Success', $queueName, $envelope);
-
-        return $out;
     }
 
     /**
@@ -151,45 +149,41 @@ final class MetricsDriver implements Driver
     /**
      * {@inheritdoc}
      */
-    public function fail(string $queueName, Envelope $envelope)
+    public function fail(string $queueName, Envelope $envelope) : void
     {
         try {
-            $out = $this->wrapped->fail($queueName, $envelope);
+            $this->wrapped->fail($queueName, $envelope);
         } catch (DriverError $e) {
             $this->trackDriverError($queueName, $e, $envelope->unwrap());
             throw $e;
         }
 
         $this->trackMessageFinished('Failure', $queueName, $envelope);
-
-        return $out;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function release(string $queueName, Envelope $envelope)
+    public function release(string $queueName, Envelope $envelope) : void
     {
         try {
-            $out = $this->wrapped->release($queueName, $envelope);
+            $this->wrapped->release($queueName, $envelope);
         } catch (DriverError $e) {
             $this->trackDriverError($queueName, $e, $envelope->unwrap());
             throw $e;
         }
 
         $this->trackMessageFinished('Release', $queueName, $envelope);
-
-        return $out;
     }
 
-    private function trackDriverError($queueName, DriverError $e, Message $msg=null)
+    private function trackDriverError($queueName, DriverError $e, Message $msg=null) : void
     {
         $this->trackMetrics($queueName, [
             Metric::count('DriverError', 1, ['ErrorClass' => get_class($e)]),
         ], $msg);
     }
 
-    private function trackMessageFinished($type, $queueName, Envelope $envelope)
+    private function trackMessageFinished($type, $queueName, Envelope $envelope) : void
     {
         $metrics = [
             Metric::count("Message{$type}", 1),
@@ -222,7 +216,7 @@ final class MetricsDriver implements Driver
      *        on driver errors.
      * @return void
      */
-    private function trackMetrics($queueName, array $metrics, Message $msg=null)
+    private function trackMetrics($queueName, array $metrics, Message $msg=null) : void
     {
         $dimensions = $this->dimensionsFor($queueName, $msg);
 
@@ -244,7 +238,7 @@ final class MetricsDriver implements Driver
         }
     }
 
-    private function dimensionsFor($queueName, Message $msg=null)
+    private function dimensionsFor($queueName, Message $msg=null) : array
     {
         return [
             'QueueName' => $queueName,
