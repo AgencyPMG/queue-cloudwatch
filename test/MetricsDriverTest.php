@@ -90,18 +90,26 @@ class MetricsDriverTest extends TestCase
      */
     public function testDequeuingFinishFlowTracksExpectedMetrics($finish, $type)
     {
-        $this->willTrackMessageMetric('Dequeue', $this->at(0));
-        $this->cloudwatch->expects($this->at(1))
+        $this->cloudwatch->expects($this->exactly(2))
             ->method('putMetricData')
-            ->with($this->callback(function (array $req) use ($type) {
-                $mn = $this->metricNamesIn($req);
+            ->withConsecutive(
+                [$this->callback(function (array $req) use ($type) {
+                    $mn = $this->metricNamesIn($req);
 
-                $this->assertCount(4, $mn, "Should have four message metrics: 2 Message{$type}, 2 MessageTime. Got: ".var_export($mn, true));
-                $this->assertContains("Message{$type}", $mn);
-                $this->assertContains('MessageTime', $mn);
+                    $this->assertContains("MessageDequeue", $mn);
 
-                return true;
-            }));
+                    return true;
+                })],
+                [$this->callback(function (array $req) use ($type) {
+                    $mn = $this->metricNamesIn($req);
+
+                    $this->assertCount(4, $mn, "Should have four message metrics: 2 Message{$type}, 2 MessageTime. Got: ".var_export($mn, true));
+                    $this->assertContains("Message{$type}", $mn);
+                    $this->assertContains('MessageTime', $mn);
+
+                    return true;
+                })]
+            );
         $this->wrapped->expects($this->once())
             ->method('dequeue')
             ->with(self::Q)
