@@ -12,15 +12,24 @@
 
 namespace PMG\Queue\CloudWatch;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use Aws\CloudWatch\CloudWatchClient;
 use Aws\CommandInterface;
 use Aws\Exception\AwsException;
 
 class MetricsDriverTest extends TestCase
 {
-    private $cloudwatch, $driver;
+    /**
+     * @var CloudWatchClient&MockObject
+     */
+    private CloudWatchClient $cloudwatch;
 
-    public static function finishers()
+    private MetricsDriver $driver;
+
+    /**
+     * @return iterable<string[]>
+     */
+    public static function finishers() : iterable
     {
         return [
             ['ack', 'Success'],
@@ -30,7 +39,7 @@ class MetricsDriverTest extends TestCase
         ];
     }
 
-    public function testEnqueueWithDriverErrorTracksDriverErrorMetrics()
+    public function testEnqueueWithDriverErrorTracksDriverErrorMetrics() : void
     {
         $this->driverThrowsFrom('enqueue');
         $this->willTrackDriverError();
@@ -38,7 +47,7 @@ class MetricsDriverTest extends TestCase
         $this->driver->enqueue(self::Q, $this->message);
     }
 
-    public function testDequeueWithDriverErrorTracksDriverErrorMetrics()
+    public function testDequeueWithDriverErrorTracksDriverErrorMetrics() : void
     {
         $this->driverThrowsFrom('dequeue');
         $this->willTrackDriverError();
@@ -49,7 +58,7 @@ class MetricsDriverTest extends TestCase
     /**
      * @dataProvider finishers
      */
-    public function testFinisherWithDriverErrorTrackerDriverErrorMetrics($method)
+    public function testFinisherWithDriverErrorTrackerDriverErrorMetrics(string $method) : void
     {
         $this->driverThrowsFrom($method);
         $this->willTrackDriverError();
@@ -57,7 +66,7 @@ class MetricsDriverTest extends TestCase
         call_user_func([$this->driver, $method], self::Q, $this->envelope);
     }
 
-    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope()
+    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope() : void
     {
         $this->willTrackMessageMetric('Enqueue');
         $this->wrapped->expects($this->once())
@@ -70,7 +79,7 @@ class MetricsDriverTest extends TestCase
         $this->assertSame($this->envelope, $e);
     }
 
-    public function testDequeueDoesNothingWhenNoMessageIsReturnedFromWrappedDriver()
+    public function testDequeueDoesNothingWhenNoMessageIsReturnedFromWrappedDriver() : void
     {
         $this->cloudwatch->expects($this->never())
             ->method('putMetricData');
@@ -88,7 +97,7 @@ class MetricsDriverTest extends TestCase
      * @dataProvider finishers
      * @group slow
      */
-    public function testDequeuingFinishFlowTracksExpectedMetrics($finish, $type)
+    public function testDequeuingFinishFlowTracksExpectedMetrics(string $finish, string $type) : void
     {
         $this->cloudwatch->expects($this->exactly(2))
             ->method('putMetricData')
@@ -130,7 +139,7 @@ class MetricsDriverTest extends TestCase
         }
     }
 
-    public function testCloudWatchErrorsAreLoggedAndSwallowed()
+    public function testCloudWatchErrorsAreLoggedAndSwallowed() : void
     {
         $this->cloudwatch->expects($this->once())
             ->method('putMetricData')
@@ -159,7 +168,7 @@ class MetricsDriverTest extends TestCase
         );
     }
 
-    private function driverThrowsFrom($method)
+    private function driverThrowsFrom(string $method)  : void
     {
         $this->expectException(Test\TestDriverError::class);
         $this->wrapped->expects($this->once())
@@ -167,7 +176,7 @@ class MetricsDriverTest extends TestCase
             ->willThrowException(new Test\TestDriverError('oops'));
     }
 
-    private function willTrackDriverError()
+    private function willTrackDriverError() : void
     {
         $this->cloudwatch->expects($this->once())
             ->method('putMetricData')
@@ -181,7 +190,7 @@ class MetricsDriverTest extends TestCase
             }));
     }
 
-    private function willTrackMessageMetric($type, $when=null)
+    private function willTrackMessageMetric(string $type, $when=null) : void
     {
         $this->cloudwatch->expects($when ?: $this->once())
             ->method('putMetricData')
@@ -195,9 +204,12 @@ class MetricsDriverTest extends TestCase
         
     }
 
-    private function metricNamesIn(array $request)
+    /**
+     * @return string[]
+     */
+    private function metricNamesIn(array $request) : array
     {
-        return array_map(function (array $m) {
+        return array_map(function (array $m) : string {
             return $m['MetricName'];
         }, $request['MetricData']);
     }

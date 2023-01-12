@@ -23,7 +23,7 @@ class MetricsDriverIntegrationTest extends TestCase
     private CloudWatchClient $cloudwatch;
     private MetricsDriver $driver;
 
-    public function testDriverErrorsAreTrackedWithMetrics()
+    public function testDriverErrorsAreTrackedWithMetrics() : void
     {
         $this->driverThrowsFrom('enqueue');
 
@@ -34,7 +34,7 @@ class MetricsDriverIntegrationTest extends TestCase
         }
     }
 
-    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope()
+    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope() : void
     {
         $this->wrapped->expects($this->once())
             ->method('enqueue')
@@ -47,7 +47,10 @@ class MetricsDriverIntegrationTest extends TestCase
         $this->assertNoErrors();
     }
 
-    public static function finishers()
+    /**
+     * @return interable<string[]>
+     */
+    public static function finishers() : iterable
     {
         return [
             ['ack'],
@@ -59,7 +62,7 @@ class MetricsDriverIntegrationTest extends TestCase
     /**
      * @dataProvider finishers
      */
-    public function testDequeuingAMessageAndFinishingItInSomeWayTracksMetrics($finish)
+    public function testDequeuingAMessageAndFinishingItInSomeWayTracksMetrics(string $finish) : void
     {
         $this->wrapped->expects($this->once())
             ->method('dequeue')
@@ -76,7 +79,7 @@ class MetricsDriverIntegrationTest extends TestCase
         $this->assertNoErrors();
     }
 
-    public function testRetryReturnsTheEnvelopeFromTheTheWrappedDriver()
+    public function testRetryReturnsTheEnvelopeFromTheTheWrappedDriver() : void
     {
         $this->wrapped->expects($this->once())
             ->method('dequeue')

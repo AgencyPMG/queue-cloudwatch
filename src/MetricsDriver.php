@@ -13,47 +13,36 @@
 
 namespace PMG\Queue\CloudWatch;
 
+use SplObjectStorage;
 use Aws\CloudWatch\CloudWatchClient;
 use Aws\Exception\AwsException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use PMG\Queue\Driver;
 use PMG\Queue\Envelope;
-use PMG\Queue\Message;
+use PMG\Queue\MessageNames;
 use PMG\Queue\Exception\DriverError;
 
 final class MetricsDriver implements Driver
 {
+    use MessageNames;
+
     const DEFAULT_NAMESPACE = 'PMG/Queue';
     const NO_MSG_NAME = '__none__';
 
-    /**
-     * @var Driver
-     */
-    private $wrapped;
+    private Driver $wrapped;
 
-    /**
-     * @var CloudWatchClient
-     */
-    private $cloudwatch;
+    private CloudWatchClient $cloudwatch;
 
-    /**
-     * @var string
-     */
-    private $metricsNamespace;
+    private string $metricsNamespace;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * A map of message envelopes to their start times. Used to track timing
      * on the message.
-     *
-     * @var SplObjectStorage
      */
-    private $startTimes;
+    private SplObjectStorage $startTimes;
 
     public function __construct(
         Driver $wrapped,
@@ -65,7 +54,7 @@ final class MetricsDriver implements Driver
         $this->cloudwatch = $cloudwatch;
         $this->metricsNamespace = $metricsNamespace ?: self::DEFAULT_NAMESPACE;
         $this->logger = $logger ?: new NullLogger();
-        $this->startTimes = new \SplObjectStorage();
+        $this->startTimes = new SplObjectStorage();
     }
 
     /**
@@ -176,14 +165,14 @@ final class MetricsDriver implements Driver
         $this->trackMessageFinished('Release', $queueName, $envelope);
     }
 
-    private function trackDriverError($queueName, DriverError $e, Message $msg=null) : void
+    private function trackDriverError(string $queueName, DriverError $e, ?object $msg=null) : void
     {
         $this->trackMetrics($queueName, [
             Metric::count('DriverError', 1, ['ErrorClass' => get_class($e)]),
         ], $msg);
     }
 
-    private function trackMessageFinished($type, $queueName, Envelope $envelope) : void
+    private function trackMessageFinished(string $type, string $queueName, Envelope $envelope) : void
     {
         $metrics = [
             Metric::count("Message{$type}", 1),
@@ -216,7 +205,7 @@ final class MetricsDriver implements Driver
      *        on driver errors.
      * @return void
      */
-    private function trackMetrics($queueName, array $metrics, Message $msg=null) : void
+    private function trackMetrics(string $queueName, array $metrics, ?object $msg=null) : void
     {
         $dimensions = $this->dimensionsFor($queueName, $msg);
 
@@ -238,15 +227,20 @@ final class MetricsDriver implements Driver
         }
     }
 
-    private function dimensionsFor($queueName, Message $msg=null) : array
+    private function dimensionsFor(string $queueName, ?object $msg=null) : array
     {
-        return [
+        $dimensions = [
             'QueueName' => $queueName,
-            'MessageName' => $msg ? $msg->getName() : self::NO_MSG_NAME,
         ];
+
+        if ($msg !== null) {
+            $dimensions['MessageName'] = self::nameOf($msg);
+        };
+
+        return $dimensions;
     }
 
-    private static function now()
+    private static function now() : float
     {
         return microtime(true) * 1000;
     }
