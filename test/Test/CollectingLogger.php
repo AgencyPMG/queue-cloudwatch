@@ -12,23 +12,33 @@
 
 namespace PMG\Queue\CloudWatch\Test;
 
+use ArrayIterator;
 use Psr\Log\AbstractLogger;
 
 final class CollectingLogger extends AbstractLogger implements \Countable, \IteratorAggregate
 {
-    private $messages = [];
+    /**
+     * @var string[]
+     */
+    private array $messages = [];
 
-    public function getIterator()
+    /**
+     * @return string[]
+     */
+    public function getIterator() : ArrayIterator
     {
-        return new \ArrayIterator($this->messages);
+        return new ArrayIterator($this->messages);
     }
 
-    public function getMessages()
+    /**
+     * @return string[]
+     */
+    public function getMessages() : array
     {
         return $this->messages;
     }
 
-    public function count()
+    public function count() : int
     {
         return count($this->messages);
     }
@@ -36,11 +46,11 @@ final class CollectingLogger extends AbstractLogger implements \Countable, \Iter
     /**
      * {@inheritdoc}
      */
-    public function log($level, $message, array $context=[])
+    public function log($level, $message, array $context=[]) : void
     {
         $replace = [];
         foreach ($context as $k => $v) {
-            $replace['{'.$k.'}'] = $v;
+            $replace['{'.$k.'}'] = is_scalar($v) ? (string) $v : get_debug_type($v);
         }
 
         $this->messages[] = sprintf('[%s] %s', $level, strtr($message, $replace));
