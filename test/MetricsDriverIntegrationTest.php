@@ -20,7 +20,8 @@ use Aws\CloudWatch\CloudWatchClient;
  */
 class MetricsDriverIntegrationTest extends TestCase
 {
-    private $cloudwatch, $driver;
+    private CloudWatchClient $cloudwatch;
+    private MetricsDriver $driver;
 
     public function testDriverErrorsAreTrackedWithMetrics()
     {
@@ -98,9 +99,14 @@ class MetricsDriverIntegrationTest extends TestCase
     protected function setUp() : void
     {
         parent::setUp();
-        $this->cloudwatch = CloudWatchClient::factory([
+        $this->cloudwatch = new CloudWatchClient([
             'region' => getenv('AWS_REGION') ?: 'us-east-1',
             'version' => 'latest',
+            'endpoint' => getenv('LOCALSTACK_ENDPOINT') ?: 'http://localhost:4566',
+            'credentials' => [
+                'key' => 'ignoredbylocalstack',
+                'secret' => 'ignoredbylocalstack',
+            ],
         ]);
         $this->driver = new MetricsDriver(
             $this->wrapped,
@@ -110,7 +116,7 @@ class MetricsDriverIntegrationTest extends TestCase
         );
     }
 
-    private function driverThrowsFrom($method)
+    private function driverThrowsFrom(string $method) : void
     {
         $this->expectException(Test\TestDriverError::class);
         $this->wrapped->expects($this->once())
@@ -118,7 +124,7 @@ class MetricsDriverIntegrationTest extends TestCase
             ->willThrowException(new Test\TestDriverError('oops'));
     }
 
-    private function assertNoErrors()
+    private function assertNoErrors() : void
     {
         $this->assertCount(
             0,
