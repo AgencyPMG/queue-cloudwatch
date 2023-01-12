@@ -20,9 +20,10 @@ use Aws\CloudWatch\CloudWatchClient;
  */
 class MetricsDriverIntegrationTest extends TestCase
 {
-    private $cloudwatch, $driver;
+    private CloudWatchClient $cloudwatch;
+    private MetricsDriver $driver;
 
-    public function testDriverErrorsAreTrackedWithMetrics()
+    public function testDriverErrorsAreTrackedWithMetrics() : void
     {
         $this->driverThrowsFrom('enqueue');
 
@@ -33,7 +34,7 @@ class MetricsDriverIntegrationTest extends TestCase
         }
     }
 
-    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope()
+    public function testEnqueuePutsMessageEnqueuedDataAndReturnsEnvelope() : void
     {
         $this->wrapped->expects($this->once())
             ->method('enqueue')
@@ -46,7 +47,10 @@ class MetricsDriverIntegrationTest extends TestCase
         $this->assertNoErrors();
     }
 
-    public static function finishers()
+    /**
+     * @return interable<string[]>
+     */
+    public static function finishers() : iterable
     {
         return [
             ['ack'],
@@ -58,7 +62,7 @@ class MetricsDriverIntegrationTest extends TestCase
     /**
      * @dataProvider finishers
      */
-    public function testDequeuingAMessageAndFinishingItInSomeWayTracksMetrics($finish)
+    public function testDequeuingAMessageAndFinishingItInSomeWayTracksMetrics(string $finish) : void
     {
         $this->wrapped->expects($this->once())
             ->method('dequeue')
@@ -75,7 +79,7 @@ class MetricsDriverIntegrationTest extends TestCase
         $this->assertNoErrors();
     }
 
-    public function testRetryReturnsTheEnvelopeFromTheTheWrappedDriver()
+    public function testRetryReturnsTheEnvelopeFromTheTheWrappedDriver() : void
     {
         $this->wrapped->expects($this->once())
             ->method('dequeue')
@@ -98,9 +102,14 @@ class MetricsDriverIntegrationTest extends TestCase
     protected function setUp() : void
     {
         parent::setUp();
-        $this->cloudwatch = CloudWatchClient::factory([
+        $this->cloudwatch = new CloudWatchClient([
             'region' => getenv('AWS_REGION') ?: 'us-east-1',
             'version' => 'latest',
+            'endpoint' => getenv('LOCALSTACK_ENDPOINT') ?: 'http://localhost:4566',
+            'credentials' => [
+                'key' => 'ignoredbylocalstack',
+                'secret' => 'ignoredbylocalstack',
+            ],
         ]);
         $this->driver = new MetricsDriver(
             $this->wrapped,
@@ -110,7 +119,7 @@ class MetricsDriverIntegrationTest extends TestCase
         );
     }
 
-    private function driverThrowsFrom($method)
+    private function driverThrowsFrom(string $method) : void
     {
         $this->expectException(Test\TestDriverError::class);
         $this->wrapped->expects($this->once())
@@ -118,7 +127,7 @@ class MetricsDriverIntegrationTest extends TestCase
             ->willThrowException(new Test\TestDriverError('oops'));
     }
 
-    private function assertNoErrors()
+    private function assertNoErrors() : void
     {
         $this->assertCount(
             0,

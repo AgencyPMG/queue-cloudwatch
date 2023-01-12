@@ -15,12 +15,21 @@ namespace PMG\Queue\CloudWatch;
 
 final class Metric
 {
-    private $name;
-    private $value;
-    private $unit;
-    private $dimensions;
+    private string $name;
 
-    public function __construct($name, $value, $unit, array $dimensions=[])
+    private int|float $value;
+
+    private string $unit;
+
+    /**
+     * @var array<string, string>
+     */
+    private array $dimensions;
+
+    /**
+     * @param array<string, string> $dimensions
+     */
+    public function __construct(string $name, int|float $value, string $unit, array $dimensions=[])
     {
         $this->name = $name;
         $this->value = $value;
@@ -28,17 +37,26 @@ final class Metric
         $this->dimensions = $dimensions;
     }
 
-    public static function count($name, $value, array $dimensions=[])
+    /**
+     * @param array<string, string> $dimensions
+     */
+    public static function count(string $name, int $value, array $dimensions=[]) : self
     {
         return new self($name, $value, 'Count', $dimensions);
     }
 
-    public static function millis($name, $value, array $dimensions=[])
+    /**
+     * @param array<string, string> $dimensions
+     */
+    public static function millis(string $name, float $value, array $dimensions=[]) : self
     {
         return new self($name, $value, 'Milliseconds', $dimensions);
     }
 
-    public function toClientArray(array $dimensions=[])
+    /**
+     * @return array<string, mixed>
+     */
+    public function toClientArray(array $dimensions=[]) : array
     {
         return [
             'MetricName' => $this->name,
@@ -51,13 +69,17 @@ final class Metric
         ];
     }
 
-    private static function toClientDimensions(array $kvs)
+    /**
+     * @return array<string, string> $kvs
+     * @return array<int, array<string, string>>
+     */
+    private static function toClientDimensions(array $kvs) : array
     {
         $out = [];
         foreach ($kvs as $name => $value) {
             $out[] = [
                 'Name' => $name, 
-                'Value' => self::limitString($value),
+                'Value' => self::limitDimensionValueString($value),
             ];
         }
 
@@ -65,12 +87,12 @@ final class Metric
     }
 
     /**
-     * Cloudwatch only allows 255 characters for dimension names and values. This
+     * Cloudwatch only allows 1024 characters for dimension names and values. This
      * ensures that the content for those values from users is limited to an
      * appropriate length.
      */
-    private static function limitString($in)
+    private static function limitDimensionValueString($in) : string
     {
-        return substr($in, 0, 255);
+        return substr($in, 0, 1024);
     }
 }
