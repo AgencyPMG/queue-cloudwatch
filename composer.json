@@ -7,15 +7,14 @@
         { "name": "Christopher Davis", "email": "chris@pmg.com" }
     ],
     "require": {
-        "php": "^8.0",
+        "php": "^8.2",
         "pmg/queue": "^6.0",
         "psr/log": "^1.0 || ^2.0 || ^3.0",
         "aws/aws-sdk-php": "^3.0"
     },
     "require-dev": {
-        "pmg/queue": "^6.0@beta",
         "phpunit/phpunit": "^9.5",
-        "symfony/phpunit-bridge": "^5.4"
+        "symfony/phpunit-bridge": "^6.4"
     },
     "autoload": {
         "psr-4": {
