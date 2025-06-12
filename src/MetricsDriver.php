@@ -48,7 +48,7 @@ final class MetricsDriver implements Driver
         Driver $wrapped,
         CloudWatchClient $cloudwatch,
         $metricsNamespace=null,
-        LoggerInterface $logger=null
+        ?LoggerInterface $logger=null
     ) {
         $this->wrapped = $wrapped;
         $this->cloudwatch = $cloudwatch;

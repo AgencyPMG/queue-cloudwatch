@@ -2,4 +2,4 @@
 
 pushd "$(git rev-parse --show-toplevel)"
 
-exec docker-compose down
+exec docker compose down
